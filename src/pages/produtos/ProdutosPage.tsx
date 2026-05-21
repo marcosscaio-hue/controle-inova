@@ -16,6 +16,8 @@ const formatBRL = (value: number | null) =>
 const formatDate = (d: string) =>
   new Date(d).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' })
 
+type MenuPos = { top: number; right: number }
+
 export default function ProdutosPage() {
   const { data: produtos = [], isLoading } = useProdutos()
   const createProduto = useCreateProduto()
@@ -26,6 +28,7 @@ export default function ProdutosPage() {
   const [modalOpen, setModalOpen] = useState(false)
   const [editing, setEditing] = useState<Produto | null>(null)
   const [menuOpen, setMenuOpen] = useState<number | null>(null)
+  const [menuPos, setMenuPos] = useState<MenuPos>({ top: 0, right: 0 })
 
   const filtered = produtos.filter((p) =>
     p.descricao.toLowerCase().includes(search.toLowerCase()) ||
@@ -35,6 +38,14 @@ export default function ProdutosPage() {
   const openNew = () => { setEditing(null); setModalOpen(true) }
   const openEdit = (p: Produto) => { setEditing(p); setModalOpen(true); setMenuOpen(null) }
   const handleDelete = (id: number) => { deleteProduto.mutate(id); setMenuOpen(null) }
+
+  const toggleMenu = (e: React.MouseEvent<HTMLButtonElement>, id: number) => {
+    e.stopPropagation()
+    if (menuOpen === id) { setMenuOpen(null); return }
+    const rect = e.currentTarget.getBoundingClientRect()
+    setMenuPos({ top: rect.bottom + 4, right: window.innerWidth - rect.right })
+    setMenuOpen(id)
+  }
 
   const handleSave = (data: ProdutoInput, id?: number) => {
     if (id != null) {
@@ -46,9 +57,34 @@ export default function ProdutosPage() {
 
   return (
     <>
-      {/* overlay para fechar menu de três pontos */}
+      {/* overlay + dropdown fixo fora de qualquer overflow */}
       {menuOpen !== null && (
-        <div className="fixed inset-0 z-10" onClick={() => setMenuOpen(null)} />
+        <>
+          <div className="fixed inset-0 z-40" onClick={() => setMenuOpen(null)} />
+          <div
+            className="fixed z-50 bg-white rounded-lg shadow-lg border border-zinc-100 py-1 min-w-[130px]"
+            style={{ top: menuPos.top, right: menuPos.right }}
+          >
+            {filtered.map((p) => p.id === menuOpen ? (
+              <span key={p.id}>
+                <button
+                  onClick={() => openEdit(p)}
+                  className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-zinc-700 hover:bg-zinc-50 transition-colors"
+                >
+                  <Pencil size={14} className="text-zinc-400" />
+                  Editar
+                </button>
+                <button
+                  onClick={() => handleDelete(p.id)}
+                  className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-rose-600 hover:bg-rose-50 transition-colors"
+                >
+                  <Trash2 size={14} />
+                  Excluir
+                </button>
+              </span>
+            ) : null)}
+          </div>
+        </>
       )}
 
       <div className="p-4 md:p-8 max-w-7xl mx-auto">
@@ -160,35 +196,13 @@ export default function ProdutosPage() {
 
                       {/* Três pontinhos mobile */}
                       <td className="md:hidden px-3 py-3.5">
-                        <div className="relative flex justify-end">
+                        <div className="flex justify-end">
                           <button
-                            onClick={(e) => {
-                              e.stopPropagation()
-                              setMenuOpen(menuOpen === produto.id ? null : produto.id)
-                            }}
+                            onClick={(e) => toggleMenu(e, produto.id)}
                             className="w-7 h-7 rounded-md flex items-center justify-center text-zinc-400 hover:text-zinc-600 hover:bg-zinc-100 transition-colors"
                           >
                             <MoreVertical size={16} />
                           </button>
-
-                          {menuOpen === produto.id && (
-                            <div className="absolute right-0 bottom-full mb-1 z-20 bg-white rounded-lg shadow-lg border border-zinc-100 py-1 min-w-[130px]">
-                              <button
-                                onClick={(e) => { e.stopPropagation(); openEdit(produto) }}
-                                className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-zinc-700 hover:bg-zinc-50 transition-colors"
-                              >
-                                <Pencil size={14} className="text-zinc-400" />
-                                Editar
-                              </button>
-                              <button
-                                onClick={(e) => { e.stopPropagation(); handleDelete(produto.id) }}
-                                className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-rose-600 hover:bg-rose-50 transition-colors"
-                              >
-                                <Trash2 size={14} />
-                                Excluir
-                              </button>
-                            </div>
-                          )}
                         </div>
                       </td>
                     </tr>
