@@ -1,4 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { supabase } from '@/lib/supabase'
 
 export type Produto = {
   id: number
@@ -15,32 +16,32 @@ export type ProdutoInput = {
   status: boolean
 }
 
-const api = async (url: string, options?: RequestInit) => {
-  const res = await fetch(url, options)
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({ error: res.statusText }))
-    throw new Error(err.error ?? 'Erro na requisição')
-  }
-  if (res.status === 204) return null
-  return res.json()
-}
-
 export function useProdutos() {
   return useQuery<Produto[]>({
     queryKey: ['produtos'],
-    queryFn: () => api('/api/produtos'),
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('produtos')
+        .select('*')
+        .order('id')
+      if (error) throw new Error(error.message)
+      return data
+    },
   })
 }
 
 export function useCreateProduto() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: (data: ProdutoInput) =>
-      api('/api/produtos', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
-      }),
+    mutationFn: async (input: ProdutoInput) => {
+      const { data, error } = await supabase
+        .from('produtos')
+        .insert(input)
+        .select()
+        .single()
+      if (error) throw new Error(error.message)
+      return data
+    },
     onSuccess: () => qc.invalidateQueries({ queryKey: ['produtos'] }),
   })
 }
@@ -48,12 +49,16 @@ export function useCreateProduto() {
 export function useUpdateProduto() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: ({ id, data }: { id: number; data: ProdutoInput }) =>
-      api(`/api/produtos/${id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
-      }),
+    mutationFn: async ({ id, data }: { id: number; data: ProdutoInput }) => {
+      const { data: updated, error } = await supabase
+        .from('produtos')
+        .update(data)
+        .eq('id', id)
+        .select()
+        .single()
+      if (error) throw new Error(error.message)
+      return updated
+    },
     onSuccess: () => qc.invalidateQueries({ queryKey: ['produtos'] }),
   })
 }
@@ -61,7 +66,10 @@ export function useUpdateProduto() {
 export function useDeleteProduto() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: (id: number) => api(`/api/produtos/${id}`, { method: 'DELETE' }),
+    mutationFn: async (id: number) => {
+      const { error } = await supabase.from('produtos').delete().eq('id', id)
+      if (error) throw new Error(error.message)
+    },
     onSuccess: () => qc.invalidateQueries({ queryKey: ['produtos'] }),
   })
 }

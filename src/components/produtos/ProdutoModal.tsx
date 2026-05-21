@@ -10,9 +10,7 @@ const schema = z.object({
     .string()
     .min(3, 'Mínimo 3 caracteres')
     .max(255, 'Máximo 255 caracteres'),
-  valor: z.coerce
-    .number()
-    .positive('Deve ser maior que zero'),
+  valor: z.number().positive('Deve ser maior que zero'),
   status: z.boolean(),
 })
 
@@ -23,7 +21,8 @@ export type Produto = {
   descricao: string
   valor: number
   status: boolean
-  data_criacao: Date
+  data_criacao: string
+  data_alteracao: string | null
 }
 
 type Props = {
@@ -108,7 +107,7 @@ export default function ProdutoModal({ open, produto, onClose, onSave }: Props) 
                 R$
               </span>
               <input
-                {...register('valor')}
+                {...register('valor', { valueAsNumber: true })}
                 type="number"
                 step="0.01"
                 min="0.01"

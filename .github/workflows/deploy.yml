@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - main
-      - claude/financial-control-app-Q4t7S
 
 permissions:
   contents: read
@@ -16,28 +15,8 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  migrate:
-    name: Run database migrations
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Setup Supabase CLI
-        uses: supabase/setup-cli@v1
-        with:
-          version: latest
-
-      - name: Run migrations
-        run: |
-          supabase link --project-ref ${{ secrets.SUPABASE_PROJECT_REF }}
-          supabase db push --include-all
-        env:
-          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
-        continue-on-error: true
-
   build:
     name: Build app
-    needs: migrate
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -52,7 +31,6 @@ jobs:
       - name: Build
         run: npm run build
         env:
-          VITE_CLERK_PUBLISHABLE_KEY: ${{ secrets.VITE_CLERK_PUBLISHABLE_KEY }}
           VITE_SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           VITE_SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
 
