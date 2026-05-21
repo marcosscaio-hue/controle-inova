@@ -89,7 +89,6 @@ export default function ProdutosPage() {
             <table className="w-full">
               <thead>
                 <tr className="border-b border-zinc-100 bg-zinc-50/70">
-                  <th className="text-left px-4 md:px-5 py-3.5 text-[11px] font-semibold text-zinc-400 uppercase tracking-wider w-14">#</th>
                   <th className="text-left px-4 md:px-5 py-3.5 text-[11px] font-semibold text-zinc-400 uppercase tracking-wider">Descrição</th>
                   <th className="hidden sm:table-cell text-left px-4 md:px-5 py-3.5 text-[11px] font-semibold text-zinc-400 uppercase tracking-wider">Marca</th>
                   <th className="hidden md:table-cell text-left px-5 py-3.5 text-[11px] font-semibold text-zinc-400 uppercase tracking-wider">Custo</th>
@@ -102,7 +101,7 @@ export default function ProdutosPage() {
               <tbody className="divide-y divide-zinc-50">
                 {isLoading ? (
                   <tr>
-                    <td colSpan={8} className="px-5 py-16 text-center text-sm text-zinc-400">
+                    <td colSpan={7} className="px-5 py-16 text-center text-sm text-zinc-400">
                       Carregando...
                     </td>
                   </tr>
@@ -113,9 +112,6 @@ export default function ProdutosPage() {
                       className="hover:bg-zinc-50/50 transition-colors cursor-pointer select-none"
                       onDoubleClick={() => openEdit(produto)}
                     >
-                      <td className="px-4 md:px-5 py-3.5 text-sm text-zinc-400 font-mono tabular-nums">
-                        {String(produto.id).padStart(3, '0')}
-                      </td>
                       <td className="px-4 md:px-5 py-3.5 text-sm font-medium text-zinc-800">
                         {produto.descricao}
                       </td>
@@ -176,7 +172,7 @@ export default function ProdutosPage() {
                           </button>
 
                           {menuOpen === produto.id && (
-                            <div className="absolute right-0 top-8 z-20 bg-white rounded-lg shadow-lg border border-zinc-100 py-1 min-w-[130px]">
+                            <div className="absolute right-0 bottom-full mb-1 z-20 bg-white rounded-lg shadow-lg border border-zinc-100 py-1 min-w-[130px]">
                               <button
                                 onClick={(e) => { e.stopPropagation(); openEdit(produto) }}
                                 className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-zinc-700 hover:bg-zinc-50 transition-colors"
@@ -199,7 +195,7 @@ export default function ProdutosPage() {
                   ))
                 ) : (
                   <tr>
-                    <td colSpan={8}>
+                    <td colSpan={7}>
                       <div className="flex flex-col items-center justify-center py-20 text-center">
                         <div className="w-14 h-14 rounded-full bg-zinc-100 flex items-center justify-center mb-4">
                           <Package size={26} className="text-zinc-300" />
