@@ -4,7 +4,9 @@ import { supabase } from '@/lib/supabase'
 export type Produto = {
   id: number
   descricao: string
+  marca: string | null
   valor: number
+  preco_custo: number | null
   status: boolean
   data_criacao: string
   data_alteracao: string | null
@@ -12,7 +14,9 @@ export type Produto = {
 
 export type ProdutoInput = {
   descricao: string
+  marca?: string
   valor: number
+  preco_custo?: number | null
   status: boolean
 }
 
