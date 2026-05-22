@@ -14,7 +14,13 @@ export type Venda = {
   data_venda: string
   data_alteracao_venda: string | null
   valor_total: number
+  desconto: number
   itens: VendaItem[]
+}
+
+export type CreateVendaInput = {
+  itens: VendaItem[]
+  desconto: number
 }
 
 export function useVendas() {
@@ -39,6 +45,7 @@ export function useVendas() {
 
       return (data ?? []).map((v) => ({
         ...v,
+        desconto: Number(v.desconto ?? 0),
         itens: (v.venda_itens ?? []).map((item: any) => ({
           produto_id: item.produto_id,
           descricao: item.produtos?.descricao ?? '',
@@ -54,12 +61,28 @@ export function useVendas() {
 export function useCreateVenda() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: async (itens: VendaItem[]) => {
-      const valor_total = itens.reduce((acc, i) => acc + Number(i.valor_total), 0)
+    mutationFn: async ({ itens, desconto }: CreateVendaInput) => {
+      // Verificar estoque de cada item
+      for (const item of itens) {
+        const { data: prod, error } = await supabase
+          .from('produtos')
+          .select('quantidade_estoque, descricao')
+          .eq('id', item.produto_id)
+          .single()
+        if (error) throw new Error(error.message)
+        if (prod.quantidade_estoque < item.quantidade) {
+          throw new Error(
+            `Estoque insuficiente para "${prod.descricao}": disponível ${prod.quantidade_estoque}, solicitado ${item.quantidade}`
+          )
+        }
+      }
+
+      const subtotal = itens.reduce((acc, i) => acc + Number(i.valor_total), 0)
+      const valor_total = Math.max(0, subtotal - desconto)
 
       const { data: venda, error: vendaError } = await supabase
         .from('vendas')
-        .insert({ valor_total })
+        .insert({ valor_total, desconto })
         .select()
         .single()
       if (vendaError) throw new Error(vendaError.message)
@@ -79,9 +102,20 @@ export function useCreateVenda() {
         throw new Error(itensError.message)
       }
 
+      // Decrementar estoque de cada item
+      for (const item of itens) {
+        await supabase.rpc('decrement_stock', {
+          p_produto_id: item.produto_id,
+          p_quantidade: item.quantidade,
+        })
+      }
+
       return venda
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['vendas'] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['vendas'] })
+      qc.invalidateQueries({ queryKey: ['produtos'] })
+    },
   })
 }
 

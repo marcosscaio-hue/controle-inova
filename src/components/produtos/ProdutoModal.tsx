@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button'
 const schema = z.object({
   descricao: z.string().min(3, 'Mínimo 3 caracteres').max(255, 'Máximo 255 caracteres'),
   marca: z.string().max(100, 'Máximo 100 caracteres').optional(),
+  quantidade_estoque: z.number().int('Deve ser inteiro').min(0, 'Não pode ser negativo'),
   valor: z.number().positive('Deve ser maior que zero'),
   preco_custo: z.number().nonnegative('Deve ser positivo').optional().nullable(),
   status: z.boolean(),
@@ -21,6 +22,7 @@ export type Produto = {
   marca: string | null
   valor: number
   preco_custo: number | null
+  quantidade_estoque: number
   status: boolean
   data_criacao: string
   data_alteracao: string | null
@@ -41,7 +43,7 @@ export default function ProdutoModal({ open, produto, onClose, onSave }: Props) 
     formState: { errors },
   } = useForm<ProdutoInput>({
     resolver: zodResolver(schema),
-    defaultValues: { descricao: '', marca: '', valor: 0, preco_custo: null, status: true },
+    defaultValues: { descricao: '', marca: '', quantidade_estoque: 0, valor: 0, preco_custo: null, status: true },
   })
 
   useEffect(() => {
@@ -51,11 +53,12 @@ export default function ProdutoModal({ open, produto, onClose, onSave }: Props) 
         ? {
             descricao: produto.descricao,
             marca: produto.marca ?? '',
+            quantidade_estoque: produto.quantidade_estoque ?? 0,
             valor: produto.valor,
             preco_custo: produto.preco_custo ?? null,
             status: produto.status,
           }
-        : { descricao: '', marca: '', valor: 0, preco_custo: null, status: true }
+        : { descricao: '', marca: '', quantidade_estoque: 0, valor: 0, preco_custo: null, status: true }
     )
   }, [open, produto, reset])
 
@@ -115,17 +118,36 @@ export default function ProdutoModal({ open, produto, onClose, onSave }: Props) 
             )}
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-zinc-700 mb-1.5">Marca</label>
-            <input
-              {...register('marca')}
-              type="text"
-              placeholder="Ex: Samsung, Nike..."
-              className={inputClass}
-            />
-            {errors.marca && (
-              <p className="text-xs text-rose-500 mt-1.5">{errors.marca.message}</p>
-            )}
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-sm font-medium text-zinc-700 mb-1.5">Marca</label>
+              <input
+                {...register('marca')}
+                type="text"
+                placeholder="Ex: Samsung..."
+                className={inputClass}
+              />
+              {errors.marca && (
+                <p className="text-xs text-rose-500 mt-1.5">{errors.marca.message}</p>
+              )}
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-zinc-700 mb-1.5">
+                Qtd. em Estoque <span className="text-rose-500">*</span>
+              </label>
+              <input
+                {...register('quantidade_estoque', { valueAsNumber: true })}
+                type="number"
+                min="0"
+                step="1"
+                placeholder="0"
+                className={inputClass}
+              />
+              {errors.quantidade_estoque && (
+                <p className="text-xs text-rose-500 mt-1.5">{errors.quantidade_estoque.message}</p>
+              )}
+            </div>
           </div>
 
           <div className="grid grid-cols-2 gap-3">
@@ -134,9 +156,7 @@ export default function ProdutoModal({ open, produto, onClose, onSave }: Props) 
                 Preço de Venda <span className="text-rose-500">*</span>
               </label>
               <div className="relative">
-                <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-sm text-zinc-400 select-none pointer-events-none">
-                  R$
-                </span>
+                <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-sm text-zinc-400 select-none pointer-events-none">R$</span>
                 <input
                   {...register('valor', { valueAsNumber: true })}
                   type="number"
@@ -152,13 +172,9 @@ export default function ProdutoModal({ open, produto, onClose, onSave }: Props) 
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-zinc-700 mb-1.5">
-                Preço de Custo
-              </label>
+              <label className="block text-sm font-medium text-zinc-700 mb-1.5">Preço de Custo</label>
               <div className="relative">
-                <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-sm text-zinc-400 select-none pointer-events-none">
-                  R$
-                </span>
+                <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-sm text-zinc-400 select-none pointer-events-none">R$</span>
                 <input
                   {...register('preco_custo', {
                     setValueAs: (v) => (v === '' || v === null ? null : parseFloat(v)),

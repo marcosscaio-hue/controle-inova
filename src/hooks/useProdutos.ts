@@ -7,6 +7,7 @@ export type Produto = {
   marca: string | null
   valor: number
   preco_custo: number | null
+  quantidade_estoque: number
   status: boolean
   data_criacao: string
   data_alteracao: string | null
@@ -17,6 +18,7 @@ export type ProdutoInput = {
   marca?: string
   valor: number
   preco_custo?: number | null
+  quantidade_estoque: number
   status: boolean
 }
 

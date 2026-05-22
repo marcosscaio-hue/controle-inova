@@ -129,6 +129,7 @@ export default function ProdutosPage() {
                   <th className="hidden sm:table-cell text-left px-4 md:px-5 py-3.5 text-[11px] font-semibold text-zinc-400 uppercase tracking-wider">Marca</th>
                   <th className="hidden md:table-cell text-left px-5 py-3.5 text-[11px] font-semibold text-zinc-400 uppercase tracking-wider">Custo</th>
                   <th className="text-left px-4 md:px-5 py-3.5 text-[11px] font-semibold text-zinc-400 uppercase tracking-wider">Venda</th>
+                  <th className="hidden sm:table-cell text-center px-4 md:px-5 py-3.5 text-[11px] font-semibold text-zinc-400 uppercase tracking-wider">Estoque</th>
                   <th className="text-left px-4 md:px-5 py-3.5 text-[11px] font-semibold text-zinc-400 uppercase tracking-wider">Status</th>
                   <th className="hidden lg:table-cell text-left px-5 py-3.5 text-[11px] font-semibold text-zinc-400 uppercase tracking-wider">Criado em</th>
                   <th className="px-4 md:px-5 py-3.5 w-20" />
@@ -137,7 +138,7 @@ export default function ProdutosPage() {
               <tbody className="divide-y divide-zinc-50">
                 {isLoading ? (
                   <tr>
-                    <td colSpan={7} className="px-5 py-16 text-center text-sm text-zinc-400">
+                    <td colSpan={8} className="px-5 py-16 text-center text-sm text-zinc-400">
                       Carregando...
                     </td>
                   </tr>
@@ -159,6 +160,17 @@ export default function ProdutosPage() {
                       </td>
                       <td className="px-4 md:px-5 py-3.5 text-sm text-zinc-600 tabular-nums">
                         {formatBRL(produto.valor)}
+                      </td>
+                      <td className="hidden sm:table-cell px-4 md:px-5 py-3.5 text-sm text-center tabular-nums">
+                        <span className={`inline-flex items-center justify-center min-w-[2rem] px-2 py-0.5 rounded-md text-xs font-semibold ${
+                          produto.quantidade_estoque === 0
+                            ? 'bg-rose-50 text-rose-600'
+                            : produto.quantidade_estoque <= 5
+                            ? 'bg-amber-50 text-amber-600'
+                            : 'bg-emerald-50 text-emerald-600'
+                        }`}>
+                          {produto.quantidade_estoque}
+                        </span>
                       </td>
                       <td className="px-4 md:px-5 py-3.5">
                         <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${
@@ -209,7 +221,7 @@ export default function ProdutosPage() {
                   ))
                 ) : (
                   <tr>
-                    <td colSpan={7}>
+                    <td colSpan={8}>
                       <div className="flex flex-col items-center justify-center py-20 text-center">
                         <div className="w-14 h-14 rounded-full bg-zinc-100 flex items-center justify-center mb-4">
                           <Package size={26} className="text-zinc-300" />

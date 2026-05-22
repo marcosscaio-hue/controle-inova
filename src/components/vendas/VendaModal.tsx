@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { X, Plus, Trash2, ShoppingCart, AlertCircle } from 'lucide-react'
+import { X, Plus, Trash2, ShoppingCart, AlertCircle, Tag } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useProdutos } from '@/hooks/useProdutos'
 import { useCreateVenda, type VendaItem } from '@/hooks/useVendas'
@@ -20,18 +20,41 @@ export default function VendaModal({ open, onClose }: Props) {
   const [quantidade, setQuantidade] = useState('1')
   const [itens, setItens] = useState<VendaItem[]>([])
   const [inputError, setInputError] = useState('')
+  const [descontoAtivo, setDescontoAtivo] = useState(false)
+  const [descontoValor, setDescontoValor] = useState('')
 
   const produtosAtivos = produtos.filter((p) => p.status)
-  const total = itens.reduce((acc, i) => acc + i.valor_total, 0)
+
+  const subtotal = itens.reduce((acc, i) => acc + i.valor_total, 0)
+  const desconto = descontoAtivo ? Math.min(parseFloat(descontoValor) || 0, subtotal) : 0
+  const total = subtotal - desconto
   const totalItens = itens.reduce((acc, i) => acc + i.quantidade, 0)
+
+  // Estoque disponível considerando o que já foi adicionado ao carrinho
+  const estoqueDisponivel = (produtoId: number) => {
+    const produto = produtos.find((p) => p.id === produtoId)
+    if (!produto) return 0
+    const noCarrinho = itens.filter((i) => i.produto_id === produtoId).reduce((a, i) => a + i.quantidade, 0)
+    return produto.quantidade_estoque - noCarrinho
+  }
 
   const handleAddItem = () => {
     const produto = produtosAtivos.find((p) => p.id === Number(selectedId))
     if (!produto) { setInputError('Selecione um produto'); return }
     const qty = parseInt(quantidade, 10)
     if (!qty || qty <= 0) { setInputError('Informe uma quantidade válida'); return }
-    setInputError('')
 
+    const disponivel = estoqueDisponivel(produto.id)
+    if (qty > disponivel) {
+      setInputError(
+        disponivel <= 0
+          ? `"${produto.descricao}" sem estoque disponível`
+          : `Estoque insuficiente. Disponível: ${disponivel} unidade(s)`
+      )
+      return
+    }
+
+    setInputError('')
     const existingIdx = itens.findIndex((i) => i.produto_id === produto.id)
     if (existingIdx >= 0) {
       setItens((prev) =>
@@ -63,7 +86,14 @@ export default function VendaModal({ open, onClose }: Props) {
 
   const handleSave = () => {
     if (itens.length === 0) { setInputError('Adicione ao menos um produto antes de salvar'); return }
-    createVenda.mutate(itens, { onSuccess: handleClose })
+    if (descontoAtivo && desconto > subtotal) { setInputError('Desconto não pode ser maior que o subtotal'); return }
+    createVenda.mutate(
+      { itens, desconto },
+      {
+        onSuccess: handleClose,
+        onError: (err) => setInputError(err.message),
+      }
+    )
   }
 
   const handleClose = () => {
@@ -71,6 +101,8 @@ export default function VendaModal({ open, onClose }: Props) {
     setSelectedId('')
     setQuantidade('1')
     setInputError('')
+    setDescontoAtivo(false)
+    setDescontoValor('')
     onClose()
   }
 
@@ -83,6 +115,7 @@ export default function VendaModal({ open, onClose }: Props) {
     >
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl mx-4 flex flex-col max-h-[90vh] overflow-hidden">
 
+        {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-zinc-100 shrink-0">
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 rounded-lg bg-indigo-50 flex items-center justify-center">
@@ -101,6 +134,7 @@ export default function VendaModal({ open, onClose }: Props) {
           </button>
         </div>
 
+        {/* Seletor de produto */}
         <div className="px-6 py-4 border-b border-zinc-100 bg-zinc-50/60 shrink-0">
           <p className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-3">
             Adicionar produto
@@ -112,11 +146,14 @@ export default function VendaModal({ open, onClose }: Props) {
               className="flex-1 px-3.5 py-2.5 text-sm border border-zinc-200 rounded-lg bg-white text-zinc-700 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 transition-all"
             >
               <option value="">Selecione um produto...</option>
-              {produtosAtivos.map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.descricao} — {formatBRL(p.valor)}
-                </option>
-              ))}
+              {produtosAtivos.map((p) => {
+                const disp = estoqueDisponivel(p.id)
+                return (
+                  <option key={p.id} value={p.id} disabled={disp <= 0}>
+                    {p.descricao} — {formatBRL(p.valor)} {disp <= 0 ? '(sem estoque)' : `(${disp} em estoque)`}
+                  </option>
+                )
+              })}
             </select>
             <input
               type="number"
@@ -141,13 +178,9 @@ export default function VendaModal({ open, onClose }: Props) {
               {inputError}
             </p>
           )}
-          {produtosAtivos.length === 0 && (
-            <p className="text-xs text-amber-600 mt-2">
-              Nenhum produto ativo disponível. Cadastre produtos ativos primeiro.
-            </p>
-          )}
         </div>
 
+        {/* Lista de itens */}
         <div className="flex-1 overflow-y-auto">
           {itens.length > 0 ? (
             <table className="w-full">
@@ -190,25 +223,76 @@ export default function VendaModal({ open, onClose }: Props) {
           )}
         </div>
 
-        <div className="px-6 py-4 border-t border-zinc-100 bg-zinc-50/60 flex items-center justify-between shrink-0">
-          <div>
-            <p className="text-xs text-zinc-400">
+        {/* Rodapé com desconto e total */}
+        <div className="px-6 py-4 border-t border-zinc-100 bg-zinc-50/60 shrink-0 space-y-3">
+
+          {/* Checkbox desconto */}
+          <label className="flex items-center gap-2.5 cursor-pointer w-fit">
+            <div className="relative">
+              <input
+                type="checkbox"
+                className="sr-only peer"
+                checked={descontoAtivo}
+                onChange={(e) => {
+                  setDescontoAtivo(e.target.checked)
+                  if (!e.target.checked) setDescontoValor('')
+                }}
+              />
+              <div className="w-9 h-5 bg-zinc-200 rounded-full peer-checked:bg-indigo-500 transition-colors" />
+              <div className="absolute left-0.5 top-0.5 w-4 h-4 bg-white rounded-full shadow-sm transition-transform peer-checked:translate-x-4" />
+            </div>
+            <div className="flex items-center gap-1.5 text-sm font-medium text-zinc-600">
+              <Tag size={13} />
+              Aplicar desconto
+            </div>
+          </label>
+
+          {descontoAtivo && (
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-zinc-500">Desconto (R$)</span>
+              <div className="relative">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-zinc-400 select-none pointer-events-none">R$</span>
+                <input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={descontoValor}
+                  onChange={(e) => setDescontoValor(e.target.value)}
+                  placeholder="0,00"
+                  className="pl-9 pr-3 py-2 text-sm border border-zinc-200 rounded-lg bg-white w-36 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 transition-all"
+                />
+              </div>
+            </div>
+          )}
+
+          <div className="flex items-end justify-between">
+            <div className="text-xs text-zinc-400">
               {itens.length} {itens.length === 1 ? 'produto' : 'produtos'} · {totalItens}{' '}
               {totalItens === 1 ? 'item' : 'itens'}
-            </p>
-            <p className="text-xl font-bold text-zinc-900 mt-0.5">{formatBRL(total)}</p>
+            </div>
+
+            <div className="text-right space-y-0.5">
+              {descontoAtivo && desconto > 0 && (
+                <>
+                  <p className="text-xs text-zinc-400">Subtotal: {formatBRL(subtotal)}</p>
+                  <p className="text-xs text-emerald-600 font-medium">Desconto: − {formatBRL(desconto)}</p>
+                </>
+              )}
+              <p className="text-xl font-bold text-zinc-900">{formatBRL(total)}</p>
+            </div>
           </div>
-          <div className="flex gap-2">
+
+          <div className="flex gap-2 pt-1">
             <button
               onClick={handleClose}
-              className="px-4 py-2.5 text-sm font-medium text-zinc-600 border border-zinc-200 rounded-lg hover:bg-zinc-100 transition-colors"
+              className="flex-1 px-4 py-2.5 text-sm font-medium text-zinc-600 border border-zinc-200 rounded-lg hover:bg-zinc-100 transition-colors"
             >
               Cancelar
             </button>
             <Button
               onClick={handleSave}
               disabled={itens.length === 0 || createVenda.isPending}
-              className="gap-2 bg-indigo-600 hover:bg-indigo-700 text-white disabled:opacity-40"
+              className="flex-1 gap-2 bg-indigo-600 hover:bg-indigo-700 text-white disabled:opacity-40"
             >
               <ShoppingCart size={15} />
               {createVenda.isPending ? 'Salvando...' : 'Salvar Venda'}
