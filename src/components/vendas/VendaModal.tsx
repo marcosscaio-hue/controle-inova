@@ -24,6 +24,7 @@ export default function VendaModal({ open, onClose }: Props) {
   const [descontoValor, setDescontoValor] = useState('')
 
   const produtosAtivos = produtos.filter((p) => p.status)
+  const semEstoque = produtosAtivos.length > 0 && produtosAtivos.every((p) => estoqueDisponivel(p.id) <= 0)
 
   const subtotal = itens.reduce((acc, i) => acc + i.valor_total, 0)
   const desconto = descontoAtivo ? Math.min(parseFloat(descontoValor) || 0, subtotal) : 0
@@ -174,6 +175,14 @@ export default function VendaModal({ open, onClose }: Props) {
               </button>
             </div>
           </div>
+          {semEstoque && (
+            <div className="flex items-start gap-2 mt-2 px-3 py-2.5 bg-amber-50 border border-amber-200 rounded-lg">
+              <AlertCircle size={14} className="text-amber-500 mt-0.5 shrink-0" />
+              <p className="text-xs text-amber-700">
+                Todos os produtos estão sem estoque. Atualize as quantidades na página de <strong>Produtos</strong> para realizar vendas.
+              </p>
+            </div>
+          )}
           {inputError && (
             <p className="flex items-center gap-1.5 text-xs text-rose-500 mt-2">
               <AlertCircle size={12} />
