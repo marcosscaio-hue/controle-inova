@@ -24,20 +24,20 @@ export default function VendaModal({ open, onClose }: Props) {
   const [descontoValor, setDescontoValor] = useState('')
 
   const produtosAtivos = produtos.filter((p) => p.status)
-  const semEstoque = produtosAtivos.length > 0 && produtosAtivos.every((p) => estoqueDisponivel(p.id) <= 0)
 
   const subtotal = itens.reduce((acc, i) => acc + i.valor_total, 0)
   const desconto = descontoAtivo ? Math.min(parseFloat(descontoValor) || 0, subtotal) : 0
   const total = subtotal - desconto
   const totalItens = itens.reduce((acc, i) => acc + i.quantidade, 0)
 
-  // Estoque disponível considerando o que já foi adicionado ao carrinho
   const estoqueDisponivel = (produtoId: number) => {
     const produto = produtos.find((p) => p.id === produtoId)
     if (!produto) return 0
     const noCarrinho = itens.filter((i) => i.produto_id === produtoId).reduce((a, i) => a + i.quantidade, 0)
     return produto.quantidade_estoque - noCarrinho
   }
+
+  const semEstoque = produtosAtivos.length > 0 && produtosAtivos.every((p) => estoqueDisponivel(p.id) <= 0)
 
   const handleAddItem = () => {
     const produto = produtosAtivos.find((p) => p.id === Number(selectedId))
