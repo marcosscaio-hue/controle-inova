@@ -139,11 +139,11 @@ export default function VendaModal({ open, onClose }: Props) {
           <p className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-3">
             Adicionar produto
           </p>
-          <div className="flex gap-2">
+          <div className="flex flex-col gap-2">
             <select
               value={selectedId}
               onChange={(e) => { setSelectedId(e.target.value); setInputError('') }}
-              className="flex-1 px-3.5 py-2.5 text-sm border border-zinc-200 rounded-lg bg-white text-zinc-700 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 transition-all"
+              className="w-full px-3.5 py-2.5 text-sm border border-zinc-200 rounded-lg bg-white text-zinc-700 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 transition-all"
             >
               <option value="">Selecione um produto...</option>
               {produtosAtivos.map((p) => {
@@ -155,22 +155,24 @@ export default function VendaModal({ open, onClose }: Props) {
                 )
               })}
             </select>
-            <input
-              type="number"
-              min="1"
-              value={quantidade}
-              onChange={(e) => setQuantidade(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && handleAddItem()}
-              placeholder="Qtd"
-              className="w-20 px-3 py-2.5 text-sm border border-zinc-200 rounded-lg bg-white text-center focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 transition-all"
-            />
-            <button
-              onClick={handleAddItem}
-              className="flex items-center gap-2 px-4 py-2.5 text-sm font-medium bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors shrink-0"
-            >
-              <Plus size={15} />
-              Adicionar
-            </button>
+            <div className="flex gap-2">
+              <input
+                type="number"
+                min="1"
+                value={quantidade}
+                onChange={(e) => setQuantidade(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleAddItem()}
+                placeholder="Qtd"
+                className="w-24 px-3 py-2.5 text-sm border border-zinc-200 rounded-lg bg-white text-center focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 transition-all shrink-0"
+              />
+              <button
+                onClick={handleAddItem}
+                className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors"
+              >
+                <Plus size={15} />
+                Adicionar
+              </button>
+            </div>
           </div>
           {inputError && (
             <p className="flex items-center gap-1.5 text-xs text-rose-500 mt-2">
