@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { X, Plus, Trash2, ShoppingCart, AlertCircle, Tag } from 'lucide-react'
+import { useState, useRef, useEffect } from 'react'
+import { X, Plus, Trash2, ShoppingCart, AlertCircle, Tag, ChevronDown, PackageX } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useProdutos } from '@/hooks/useProdutos'
 import { useCreateVenda, type VendaItem } from '@/hooks/useVendas'
@@ -17,7 +17,19 @@ export default function VendaModal({ open, onClose }: Props) {
   const createVenda = useCreateVenda()
 
   const [selectedId, setSelectedId] = useState('')
+  const [dropdownOpen, setDropdownOpen] = useState(false)
   const [quantidade, setQuantidade] = useState('1')
+  const dropdownRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setDropdownOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [])
   const [itens, setItens] = useState<VendaItem[]>([])
   const [inputError, setInputError] = useState('')
   const [descontoAtivo, setDescontoAtivo] = useState(false)
@@ -38,6 +50,7 @@ export default function VendaModal({ open, onClose }: Props) {
   }
 
   const semEstoque = produtosAtivos.length > 0 && produtosAtivos.every((p) => estoqueDisponivel(p.id) <= 0)
+  const produtoSelecionado = produtosAtivos.find((p) => p.id === Number(selectedId))
 
   const handleAddItem = () => {
     const produto = produtosAtivos.find((p) => p.id === Number(selectedId))
@@ -141,21 +154,52 @@ export default function VendaModal({ open, onClose }: Props) {
             Adicionar produto
           </p>
           <div className="flex flex-col gap-2">
-            <select
-              value={selectedId}
-              onChange={(e) => { setSelectedId(e.target.value); setInputError('') }}
-              className="w-full px-3.5 py-2.5 text-sm border border-zinc-200 rounded-lg bg-white text-zinc-700 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 transition-all"
-            >
-              <option value="">Selecione um produto...</option>
-              {produtosAtivos.map((p) => {
-                const disp = estoqueDisponivel(p.id)
-                return (
-                  <option key={p.id} value={p.id} disabled={disp <= 0}>
-                    {p.descricao} — {formatBRL(p.valor)} {disp <= 0 ? '(sem estoque)' : `(${disp} em estoque)`}
-                  </option>
-                )
-              })}
-            </select>
+            {/* Dropdown customizado */}
+            <div ref={dropdownRef} className="relative">
+              <button
+                type="button"
+                onClick={() => setDropdownOpen((v) => !v)}
+                className="w-full flex items-center justify-between px-3.5 py-2.5 text-sm border border-zinc-200 rounded-lg bg-white text-left focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 transition-all"
+              >
+                <span className={produtoSelecionado ? 'text-zinc-700' : 'text-zinc-400'}>
+                  {produtoSelecionado ? produtoSelecionado.descricao : 'Selecione um produto...'}
+                </span>
+                <ChevronDown size={14} className={`text-zinc-400 transition-transform ${dropdownOpen ? 'rotate-180' : ''}`} />
+              </button>
+
+              {dropdownOpen && (
+                <div className="absolute z-50 mt-1 w-full bg-white border border-zinc-200 rounded-lg shadow-lg max-h-56 overflow-y-auto">
+                  {produtosAtivos.map((p) => {
+                    const disp = estoqueDisponivel(p.id)
+                    const semStock = disp <= 0
+                    return (
+                      <button
+                        key={p.id}
+                        type="button"
+                        disabled={semStock}
+                        onClick={() => {
+                          setSelectedId(String(p.id))
+                          setInputError('')
+                          setDropdownOpen(false)
+                        }}
+                        className={`w-full flex items-center justify-between px-3.5 py-2.5 text-sm text-left transition-colors ${
+                          semStock
+                            ? 'bg-rose-50 text-rose-400 cursor-not-allowed'
+                            : 'text-zinc-700 hover:bg-indigo-50 hover:text-indigo-700 cursor-pointer'
+                        }`}
+                      >
+                        <span className="truncate">{p.descricao}</span>
+                        <span className={`text-xs ml-2 shrink-0 ${semStock ? 'text-rose-400' : 'text-zinc-400'}`}>
+                          {semStock
+                            ? <span className="flex items-center gap-1"><PackageX size={12} /> Sem estoque</span>
+                            : `${formatBRL(p.valor)} · ${disp} un.`}
+                        </span>
+                      </button>
+                    )
+                  })}
+                </div>
+              )}
+            </div>
             <div className="flex gap-2">
               <input
                 type="number"
