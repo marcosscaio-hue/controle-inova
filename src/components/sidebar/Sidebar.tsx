@@ -2,6 +2,7 @@ import { NavLink, useNavigate } from 'react-router-dom'
 import { LayoutDashboard, Package, ShoppingCart, KeyRound, ChevronRight, LogOut } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useAuth } from '@/store/useAuth'
+import logo from '@/assets/logo.png'
 
 const navItems = [
   { to: '/', label: 'Dashboard', icon: LayoutDashboard, end: true },
@@ -44,14 +45,8 @@ export default function Sidebar({ open, onClose }: Props) {
           open ? 'translate-x-0' : '-translate-x-full'
         )}
       >
-        <div className="flex items-center gap-3 px-5 py-[18px] border-b border-zinc-800">
-          <div className="w-8 h-8 rounded-lg bg-indigo-500 flex items-center justify-center shrink-0">
-            <span className="text-white font-bold text-xs tracking-tight">GC</span>
-          </div>
-          <div className="leading-tight">
-            <p className="text-sm font-semibold text-zinc-100">Gerenciador</p>
-            <p className="text-[11px] text-zinc-400">Controle</p>
-          </div>
+        <div className="flex items-center justify-center px-5 py-3 border-b border-zinc-800">
+          <img src={logo} alt="InovaTech" className="h-14 w-auto object-contain" />
         </div>
 
         <nav className="flex-1 px-3 py-5 space-y-0.5">

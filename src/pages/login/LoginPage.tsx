@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { Eye, EyeOff, LogIn, AlertCircle } from 'lucide-react'
 import { login } from '@/lib/auth'
 import { useAuth } from '@/store/useAuth'
+import logo from '@/assets/logo.png'
 
 function formatCPF(value: string) {
   const digits = value.replace(/\D/g, '').slice(0, 11)
@@ -49,10 +50,7 @@ export default function LoginPage() {
 
           {/* Header */}
           <div className="px-8 pt-8 pb-6 text-center border-b border-zinc-100">
-            <div className="w-12 h-12 rounded-xl bg-indigo-600 flex items-center justify-center mx-auto mb-4">
-              <LogIn size={22} className="text-white" />
-            </div>
-            <h1 className="text-xl font-semibold text-zinc-900">Controle Inova</h1>
+            <img src={logo} alt="InovaTech" className="h-24 w-auto mx-auto mb-3 object-contain" />
             <p className="text-sm text-zinc-400 mt-1">Faça login para continuar</p>
           </div>
 
