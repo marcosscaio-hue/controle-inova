@@ -5,6 +5,7 @@ import DashboardPage from '@/pages/DashboardPage'
 import ProdutosPage from '@/pages/produtos/ProdutosPage'
 import VendasPage from '@/pages/vendas/VendasPage'
 import LoginPage from '@/pages/login/LoginPage'
+import AlterarSenhaPage from '@/pages/perfil/AlterarSenhaPage'
 import ProtectedRoute from '@/components/ProtectedRoute'
 
 const queryClient = new QueryClient()
@@ -19,6 +20,7 @@ export default function App() {
             <Route index element={<DashboardPage />} />
             <Route path="produtos" element={<ProdutosPage />} />
             <Route path="vendas" element={<VendasPage />} />
+            <Route path="alterar-senha" element={<AlterarSenhaPage />} />
           </Route>
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

@@ -29,3 +29,29 @@ export async function login(cpf: string, senha: string): Promise<Usuario> {
   if (error || !data) throw new Error('CPF ou senha inválidos')
   return data as Usuario
 }
+
+export async function alterarSenha(
+  usuarioId: number,
+  senhaAtual: string,
+  novaSenha: string
+): Promise<void> {
+  const hashAtual = await sha256(senhaAtual)
+
+  const { data, error } = await supabase
+    .from('usuarios')
+    .select('id')
+    .eq('id', usuarioId)
+    .eq('senha_hash', hashAtual)
+    .eq('ativo', true)
+    .single()
+
+  if (error || !data) throw new Error('Senha atual incorreta')
+
+  const novoHash = await sha256(novaSenha)
+  const { error: updateError } = await supabase
+    .from('usuarios')
+    .update({ senha_hash: novoHash })
+    .eq('id', usuarioId)
+
+  if (updateError) throw new Error('Erro ao atualizar senha')
+}

@@ -1,5 +1,5 @@
 import { NavLink, useNavigate } from 'react-router-dom'
-import { LayoutDashboard, Package, ShoppingCart, Settings, ChevronRight, LogOut } from 'lucide-react'
+import { LayoutDashboard, Package, ShoppingCart, KeyRound, ChevronRight, LogOut } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useAuth } from '@/store/useAuth'
 
@@ -88,10 +88,26 @@ export default function Sidebar({ open, onClose }: Props) {
         </nav>
 
         <div className="px-3 pb-2 space-y-0.5">
-          <button className="w-full group flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-zinc-400 hover:bg-zinc-800 hover:text-zinc-100 transition-all duration-150">
-            <Settings size={17} className="text-zinc-500 group-hover:text-zinc-300" />
-            <span>Configurações</span>
-          </button>
+          <NavLink
+            to="/alterar-senha"
+            onClick={onClose}
+            className={({ isActive }) =>
+              cn(
+                'group flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150',
+                isActive
+                  ? 'bg-indigo-600 text-white shadow-sm'
+                  : 'text-zinc-400 hover:bg-zinc-800 hover:text-zinc-100'
+              )
+            }
+          >
+            {({ isActive }) => (
+              <>
+                <KeyRound size={17} className={isActive ? 'text-white' : 'text-zinc-500 group-hover:text-zinc-300'} />
+                <span className="flex-1">Alterar Senha</span>
+                {isActive && <ChevronRight size={14} className="text-indigo-300" />}
+              </>
+            )}
+          </NavLink>
         </div>
 
         <div className="px-4 py-4 border-t border-zinc-800">
