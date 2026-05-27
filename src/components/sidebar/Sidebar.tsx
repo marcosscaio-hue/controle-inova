@@ -1,6 +1,7 @@
-import { NavLink } from 'react-router-dom'
-import { LayoutDashboard, Package, ShoppingCart, Settings, ChevronRight } from 'lucide-react'
+import { NavLink, useNavigate } from 'react-router-dom'
+import { LayoutDashboard, Package, ShoppingCart, Settings, ChevronRight, LogOut } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { useAuth } from '@/store/useAuth'
 
 const navItems = [
   { to: '/', label: 'Dashboard', icon: LayoutDashboard, end: true },
@@ -14,6 +15,18 @@ type Props = {
 }
 
 export default function Sidebar({ open, onClose }: Props) {
+  const navigate = useNavigate()
+  const { usuario, logout } = useAuth()
+
+  const handleLogout = () => {
+    logout()
+    navigate('/login', { replace: true })
+  }
+
+  const iniciais = usuario?.nome
+    ? usuario.nome.split(' ').map((n) => n[0]).slice(0, 2).join('').toUpperCase()
+    : 'U'
+
   return (
     <>
       {/* Overlay mobile */}
@@ -74,7 +87,7 @@ export default function Sidebar({ open, onClose }: Props) {
           ))}
         </nav>
 
-        <div className="px-3 pb-4 space-y-0.5">
+        <div className="px-3 pb-2 space-y-0.5">
           <button className="w-full group flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-zinc-400 hover:bg-zinc-800 hover:text-zinc-100 transition-all duration-150">
             <Settings size={17} className="text-zinc-500 group-hover:text-zinc-300" />
             <span>Configurações</span>
@@ -84,12 +97,21 @@ export default function Sidebar({ open, onClose }: Props) {
         <div className="px-4 py-4 border-t border-zinc-800">
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 rounded-full bg-indigo-600 flex items-center justify-center shrink-0">
-              <span className="text-xs font-semibold text-white">A</span>
+              <span className="text-xs font-semibold text-white">{iniciais}</span>
             </div>
-            <div className="min-w-0">
-              <p className="text-sm font-medium text-zinc-200 truncate">Admin</p>
-              <p className="text-[11px] text-zinc-500 truncate">gerenciador</p>
+            <div className="min-w-0 flex-1">
+              <p className="text-sm font-medium text-zinc-200 truncate">{usuario?.nome ?? 'Usuário'}</p>
+              <p className="text-[11px] text-zinc-500 truncate">
+                {usuario?.cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4')}
+              </p>
             </div>
+            <button
+              onClick={handleLogout}
+              title="Sair"
+              className="w-7 h-7 rounded-lg flex items-center justify-center text-zinc-500 hover:text-rose-400 hover:bg-zinc-800 transition-colors shrink-0"
+            >
+              <LogOut size={15} />
+            </button>
           </div>
         </div>
       </aside>

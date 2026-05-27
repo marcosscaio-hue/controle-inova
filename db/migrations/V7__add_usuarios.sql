@@ -1,0 +1,14 @@
+CREATE TABLE IF NOT EXISTS usuarios (
+  id SERIAL PRIMARY KEY,
+  cpf VARCHAR(11) NOT NULL UNIQUE,
+  senha_hash VARCHAR(64) NOT NULL,
+  nome VARCHAR(100),
+  ativo BOOLEAN NOT NULL DEFAULT true,
+  data_criacao TIMESTAMP NOT NULL DEFAULT NOW()
+);
+
+-- senha: 123@456 (SHA-256)
+INSERT INTO usuarios (cpf, senha_hash, nome) VALUES
+  ('60712207341', '4414111a1edb1dffdfa8c6429e4f9f2cccae076543cc9d7045fd217a53ebe441', 'Usuário 1'),
+  ('04217971346', '4414111a1edb1dffdfa8c6429e4f9f2cccae076543cc9d7045fd217a53ebe441', 'Usuário 2')
+ON CONFLICT (cpf) DO NOTHING;

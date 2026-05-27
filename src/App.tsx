@@ -4,6 +4,8 @@ import MainLayout from '@/layouts/MainLayout'
 import DashboardPage from '@/pages/DashboardPage'
 import ProdutosPage from '@/pages/produtos/ProdutosPage'
 import VendasPage from '@/pages/vendas/VendasPage'
+import LoginPage from '@/pages/login/LoginPage'
+import ProtectedRoute from '@/components/ProtectedRoute'
 
 const queryClient = new QueryClient()
 
@@ -12,7 +14,8 @@ export default function App() {
     <QueryClientProvider client={queryClient}>
       <HashRouter>
         <Routes>
-          <Route element={<MainLayout />}>
+          <Route path="/login" element={<LoginPage />} />
+          <Route element={<ProtectedRoute><MainLayout /></ProtectedRoute>}>
             <Route index element={<DashboardPage />} />
             <Route path="produtos" element={<ProdutosPage />} />
             <Route path="vendas" element={<VendasPage />} />
