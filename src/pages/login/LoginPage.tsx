@@ -50,7 +50,7 @@ export default function LoginPage() {
 
           {/* Header */}
           <div className="px-8 pt-8 pb-6 text-center border-b border-zinc-100">
-            <img src={logo} alt="InovaTech" className="h-24 w-auto mx-auto mb-3 object-contain" />
+            <img src={logo} alt="InovaTech" className="h-36 w-auto mx-auto mb-3 object-contain" />
             <p className="text-sm text-zinc-400 mt-1">Faça login para continuar</p>
           </div>
 
